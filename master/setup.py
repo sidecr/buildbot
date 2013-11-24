@@ -197,7 +197,7 @@ else:
         # buildbot depends on sqlalchemy internals, and these are the tested
         # versions.
         'sqlalchemy-migrate ==0.6.1, ==0.7.0, ==0.7.1, ==0.7.2',
-        'python-dateutil==1.5',
+        'python-dateutil>=1.5',
     ]
     setup_args['tests_require'] = [
         'mock',
