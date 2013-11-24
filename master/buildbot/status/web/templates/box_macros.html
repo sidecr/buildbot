@@ -16,8 +16,8 @@
 
 {# this is currently just the text part of the boxes #}
 
-{% macro build_box(reason, url, number) -%}
-  <a title="Reason: {{ reason|e }}" href="{{ url }}">Build {{ number }}</a>
+{% macro build_box(reason, url, number, branch) -%}
+<a title="Reason: {{ reason|e }}" href="{{ url }}">Build {{ number }}<br>Branch {{ branch }}</a>
 {%- endmacro %}
 
 {% macro step_box(text, logs, urls, stepinfo) -%}
