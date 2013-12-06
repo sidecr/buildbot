@@ -17,7 +17,8 @@
 <div>
 <h2>Modified</h2>
 <form name="config" action="/config/reconfig" method="POST">
-    <textarea cols="80" rows="100" name="config_text">{{ config_str }}</textarea>
+    <textarea cols="80" rows="100" name="config_text"
+              style="font-family: monospace;">{{ config_str }}</textarea>
     <br />
     <input type="submit" value="reconfig" >
 </form>
