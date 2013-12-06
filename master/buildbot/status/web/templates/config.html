@@ -13,7 +13,6 @@
 <h2>Current</h2>
 <pre>{{ config_str }}</pre>
 </div>
-
 <div>
 <h2>Modified</h2>
 <form name="config" action="/config/reconfig" method="POST">
@@ -24,5 +23,16 @@
     <input type="submit" value="reconfig" >
 </form>
 </div>
+
+<div>
+    <h2>Key</h2>
+    <pre>
+projects:
+  BuilderName:
+    branch:
+      properties:
+    </pre>
+</div>
+
 
 {% endblock %}
