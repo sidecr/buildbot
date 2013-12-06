@@ -32,11 +32,10 @@ class ConfigResource(HtmlResource):
 
     @defer.inlineCallbacks
     def content(self, req, ctx):
-        #TODO: Security
         res = yield self.getAuthz(req).actionAllowed('reconfig', req)
-        #if not res:
-        #    defer.returnValue(redirectTo(path_to_authzfail(req), req))
-        #    return
+        if not res:
+            defer.returnValue(redirectTo(path_to_authzfail(req), req))
+            return
 
         #TODO: read the config file
         ctx['config_str'] = 'DUMMY CONFIG TEXT'
@@ -54,11 +53,10 @@ class ReconfigResource(ActionResource):
 
     @defer.inlineCallbacks
     def performAction(self, req):
-        #TODO: Security
         res = yield self.getAuthz(req).actionAllowed('reconfig', req)
-        #if not res:
-        #    defer.returnValue(redirectTo(path_to_authzfail(req), req))
-        #    return
+        if not res:
+            defer.returnValue(redirectTo(path_to_authzfail(req), req))
+            return
 
         config_text = req.args.get("config_text")
         log.msg(config_text)
