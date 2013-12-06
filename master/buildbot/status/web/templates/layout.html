@@ -34,6 +34,9 @@
         {% if authz.advertiseAction('showUsersPage', request) %}
           <a href="{{ path_to_root }}users">Users</a>
         {% endif %}
+        {% if authz.advertiseAction('reconfig', request) %}
+          <a href="{{ path_to_root }}config">Config</a>
+        {% endif %}
         - <a href="{{ path_to_root }}json/help">JSON API</a>
         - <a href="{{ path_to_root }}about">About</a>
         {% endif %}
