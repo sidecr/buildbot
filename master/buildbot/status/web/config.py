@@ -14,16 +14,15 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.web import html
 from twisted.web.util import redirectTo
-import urllib, time
 from twisted.python import log
 from twisted.internet import defer
-from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
-    path_to_build, path_to_slave, path_to_builder, path_to_change, \
-    path_to_root, ICurrentBox, build_get_class, \
-    map_branches, path_to_authzfail, ActionResource, \
-    getRequestCharset
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import path_to_root
+from buildbot.status.web.base import path_to_authzfail
+from buildbot.status.web.base import ActionResource
+
+CONFIG_FILENAME = 'sidecar_config.yaml'
 
 
 #/config
@@ -38,8 +37,8 @@ class ConfigResource(HtmlResource):
             defer.returnValue(redirectTo(path_to_authzfail(req), req))
             return
 
-        #TODO: read the config file
-        ctx['config_str'] = 'DUMMY CONFIG TEXT'
+        with open(CONFIG_FILENAME, 'r') as config_file:
+            ctx['config_str'] = config_file.read()
 
         template = req.site.buildbot_service.templates.get_template(
             "config.html")
@@ -62,11 +61,13 @@ class ReconfigResource(ActionResource):
         config_text = req.args.get("config_text")
         log.msg(config_text)
 
-        #TODO write the config file to a temp thing
-        #TODO test the config file for validity
         #TODO save the old config as backup
-        #TODO move the config file to be the master
-        #TODO restart buildbot
+        #TODO write the config file to be the master
+        #TODO test the config file for validity
+        #TODO if bad
+            #TODO  restore the old config
+        #TODO: otherwise
+            #TODO restart buildbot
 
         # send the user back to the config page
 
