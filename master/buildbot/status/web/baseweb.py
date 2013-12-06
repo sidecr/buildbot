@@ -101,6 +101,7 @@ class WebStatus(service.MultiService):
      /change_hook[/DIALECT] : accepts changes from external sources, optionally
                               choosing the dialect that will be permitted
                               (i.e. github format, etc..)
+     /config : reconfigure the yaml file for schedulers and other stuff
 
      and more!  see the manual.
 
