@@ -33,7 +33,7 @@ PROJECTS_BACKUP_FILENAME = PROJECTS_FILENAME+'.BACKUP'
 
 #/config
 class ConfigResource(HtmlResource):
-    pageTitle = "Config"
+    pageTitle = "Projects Config"
     addSlash = True
 
     @defer.inlineCallbacks
