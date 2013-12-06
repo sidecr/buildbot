@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+import shutil
+import subprocess
+import datetime
 
-from twisted.web.util import redirectTo
 from twisted.python import log
+from twisted.web.util import redirectTo
 from twisted.internet import defer
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.base import path_to_root
@@ -23,6 +27,7 @@ from buildbot.status.web.base import path_to_authzfail
 from buildbot.status.web.base import ActionResource
 
 CONFIG_FILENAME = 'sidecar_config.yaml'
+CONFIG_BACKUP_FILENAME = CONFIG_FILENAME+'.BACKUP'
 
 
 #/config
@@ -36,6 +41,8 @@ class ConfigResource(HtmlResource):
         if not res:
             defer.returnValue(redirectTo(path_to_authzfail(req), req))
             return
+
+        ctx['success'] = req.args.get('success', [None])[0]
 
         with open(CONFIG_FILENAME, 'r') as config_file:
             ctx['config_str'] = config_file.read()
@@ -64,17 +71,37 @@ class ReconfigActionResource(ActionResource):
             defer.returnValue(redirectTo(path_to_authzfail(req), req))
             return
 
-        config_text = req.args.get("config_text")
-        log.msg(config_text)
+        config_text = req.args.get("config_text")[0]
 
-        #TODO save the old config as backup
-        #TODO write the config file to be the master
-        #TODO test the config file for validity
-        #TODO if bad
-            #TODO  restore the old config
-        #TODO: otherwise
-            #TODO restart buildbot
+        timestr = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        new_config_filename = '%s.%s' % (CONFIG_FILENAME, timestr)
 
-        # send the user back to the config page
+        log.msg('Backing up old link to config file...')
 
-        defer.returnValue(path_to_root(req) + "config")
+        shutil.move(CONFIG_FILENAME, CONFIG_BACKUP_FILENAME)
+        try:
+            log.msg('Writing new log file: %s...' % new_config_filename)
+            with open(new_config_filename, 'w') as config_file:
+                config_file.write(str(config_text))
+            log.msg('Linking to new log file...')
+            os.symlink(new_config_filename, CONFIG_FILENAME)
+            log.msg('Checking configuration validity...')
+            subprocess.check_call(['buildbot', 'checkconfig'])
+            log.msg('Success!')
+            log.msg('Reconfiguring buildbot...')
+            subprocess.call(['buildbot', 'reconfig'])
+            log.msg('Buildbot reconfiguring!')
+            success = '1'
+            try:
+                os.remove(CONFIG_BACKUP_FILENAME)
+            except IOError as exc:
+                log.msg(str(exc))
+        except (subprocess.CalledProcessError, IOError) as exc:
+            log.msg(str(exc))
+            log.msg('Reverting the symlink to the last backup.')
+            os.remove(CONFIG_FILENAME)
+            shutil.move(CONFIG_BACKUP_FILENAME, CONFIG_FILENAME)
+            success = '0'
+
+        path = "%sconfig?success=%s" % (path_to_root(req), success)
+        defer.returnValue(path)

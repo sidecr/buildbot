@@ -3,6 +3,11 @@
 
 {% block content %}
 <h1>Config</h1>
+{% if success == '1' %}
+    <h2 style="color: green">Successful Reconfig!</h2>
+{% elif success == '0' %}
+    <h2 style="color: red">Error Reconfiguring, Reverted!</h2>
+{% endif %}
 
 <div style="float: left;">
 <h2>Current</h2>
