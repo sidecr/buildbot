@@ -4,15 +4,18 @@
 {% block content %}
 <h1>Config</h1>
 
-<code>
-    {{ config_str }}
-</code>
+<div style="float: left;">
+<h2>Current</h2>
+<pre>{{ config_str }}</pre>
+</div>
 
+<div>
+<h2>Modified</h2>
 <form name="config" action="/reconfig" method="POST">
-    <textarea cols="80" rows="100" name="config_text">
-        {{ config_str }}
-    </textarea><br />
+    <textarea cols="80" rows="100" name="config_text">{{ config_str }}</textarea>
+    <br />
     <input type="button" value="reconfig" >
 </form>
+</div>
 
 {% endblock %}
