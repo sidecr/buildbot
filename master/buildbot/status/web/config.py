@@ -44,9 +44,15 @@ class ConfigResource(HtmlResource):
             "config.html")
         defer.returnValue(template.render(**ctx))
 
+    def getChild(self, path, req):
+        if path == "reconfig":
+            return ReconfigActionResource()
 
-#/reconfig
-class ReconfigResource(ActionResource):
+        return super(ConfigResource, self).getChild(self, path, req)
+
+
+#/config/reconfig
+class ReconfigActionResource(ActionResource):
 
     def __init__(self):
         self.action = "reconfig"
