@@ -26,8 +26,9 @@ from buildbot.status.web.base import path_to_root
 from buildbot.status.web.base import path_to_authzfail
 from buildbot.status.web.base import ActionResource
 
-CONFIG_FILENAME = 'sidecar_config.yaml'
-CONFIG_BACKUP_FILENAME = CONFIG_FILENAME+'.BACKUP'
+CONFIG_DIR = 'config'
+PROJECTS_FILENAME = os.path.join(CONFIG_DIR, 'sidecar_projects.yaml')
+PROJECTS_BACKUP_FILENAME = PROJECTS_FILENAME+'.BACKUP'
 
 
 #/config
@@ -44,7 +45,7 @@ class ConfigResource(HtmlResource):
 
         ctx['success'] = req.args.get('success', [None])[0]
 
-        with open(CONFIG_FILENAME, 'r') as config_file:
+        with open(PROJECTS_FILENAME, 'r') as config_file:
             ctx['config_str'] = config_file.read()
 
         template = req.site.buildbot_service.templates.get_template(
@@ -74,17 +75,17 @@ class ReconfigActionResource(ActionResource):
         config_text = req.args.get("config_text")[0]
 
         timestr = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        new_config_filename = '%s.%s' % (CONFIG_FILENAME, timestr)
+        new_config_filename = '%s.%s' % (PROJECTS_FILENAME, timestr)
 
         log.msg('Backing up old link to config file...')
 
-        shutil.move(CONFIG_FILENAME, CONFIG_BACKUP_FILENAME)
+        shutil.move(PROJECTS_FILENAME, PROJECTS_BACKUP_FILENAME)
         try:
             log.msg('Writing new log file: %s...' % new_config_filename)
             with open(new_config_filename, 'w') as config_file:
                 config_file.write(str(config_text))
             log.msg('Linking to new log file...')
-            os.symlink(new_config_filename, CONFIG_FILENAME)
+            os.symlink(new_config_filename, PROJECTS_FILENAME)
             log.msg('Checking configuration validity...')
             subprocess.check_call(['buildbot', 'checkconfig'])
             log.msg('Success!')
@@ -93,14 +94,14 @@ class ReconfigActionResource(ActionResource):
             log.msg('Buildbot reconfiguring!')
             success = '1'
             try:
-                os.remove(CONFIG_BACKUP_FILENAME)
+                os.remove(PROJECTS_BACKUP_FILENAME)
             except IOError as exc:
                 log.msg(str(exc))
         except (subprocess.CalledProcessError, IOError) as exc:
             log.msg(str(exc))
             log.msg('Reverting the symlink to the last backup.')
-            os.remove(CONFIG_FILENAME)
-            shutil.move(CONFIG_BACKUP_FILENAME, CONFIG_FILENAME)
+            os.remove(PROJECTS_FILENAME)
+            shutil.move(PROJECTS_BACKUP_FILENAME, PROJECTS_FILENAME)
             success = '0'
 
         path = "%sconfig?success=%s" % (path_to_root(req), success)
