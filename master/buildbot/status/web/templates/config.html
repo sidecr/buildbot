@@ -1,0 +1,18 @@
+{% extends 'layout.html' %}
+{% import 'forms.html' as forms %}
+
+{% block content %}
+<h1>Config</h1>
+
+<code>
+    {{ config_str }}
+</code>
+
+<form name="config" action="/reconfig" method="POST">
+    <textarea cols="80" rows="100" name="config_text">
+        {{ config_str }}
+    </textarea>
+    <input type="button" value="reconfig" >
+</form>
+
+{% endblock %}

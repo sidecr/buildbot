@@ -45,6 +45,7 @@ from buildbot.status.web.auth import AuthFailResource,AuthzFailResource, LoginRe
 from buildbot.status.web.root import RootPage
 from buildbot.status.web.users import UsersResource
 from buildbot.status.web.change_hook import ChangeHookResource
+from buildbot.status.web.config import ConfigResource
 from twisted.cred.portal import IRealm, Portal
 from twisted.web import resource, guard
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
@@ -412,6 +413,7 @@ class WebStatus(service.MultiService):
         self.putChild("users", UsersResource())
         self.putChild("login", LoginResource())
         self.putChild("logout", LogoutResource())
+        self.putChild("config", ConfigResource())
 
     def __repr__(self):
         if self.http_port is None:
