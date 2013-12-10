@@ -73,6 +73,7 @@ class ReconfigActionResource(ActionResource):
             return
 
         config_text = req.args.get("config_text")[0]
+        config_text = config_text.replace('\r','')
 
         timestr = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         new_config_filename = '%s.%s' % (PROJECTS_FILENAME, timestr)
@@ -87,8 +88,9 @@ class ReconfigActionResource(ActionResource):
             log.msg('Linking to new log file...')
             os.symlink(new_config_filename, PROJECTS_FILENAME)
             log.msg('Checking configuration validity...')
-            subprocess.check_call(['buildbot', 'checkconfig'])
-            log.msg('Success!')
+            result = subprocess.check_output(['buildbot', 'checkconfig'],
+                                             stderr=subprocess.STDOUT)
+            log.msg(result)
             log.msg('Reconfiguring buildbot...')
             subprocess.call(['buildbot', 'reconfig'])
             log.msg('Buildbot reconfiguring!')
@@ -99,6 +101,8 @@ class ReconfigActionResource(ActionResource):
                 log.msg(str(exc))
         except (subprocess.CalledProcessError, IOError) as exc:
             log.msg(str(exc))
+            if hasattr(exc, 'output'):
+                log.msg(exc.output)
             log.msg('Reverting the symlink to the last backup.')
             os.remove(PROJECTS_FILENAME)
             shutil.move(PROJECTS_BACKUP_FILENAME, PROJECTS_FILENAME)
