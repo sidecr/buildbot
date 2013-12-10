@@ -73,20 +73,22 @@ class ReconfigActionResource(ActionResource):
             return
 
         config_text = req.args.get("config_text")[0]
-        config_text = config_text.replace('\r','')
+        config_text = config_text.replace('\r', '')
 
         timestr = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         new_config_filename = '%s.%s' % (PROJECTS_FILENAME, timestr)
 
-        log.msg('Backing up old link to config file...')
+        log.msg('Backing up old link to projects file...')
 
         shutil.move(PROJECTS_FILENAME, PROJECTS_BACKUP_FILENAME)
         try:
-            log.msg('Writing new log file: %s...' % new_config_filename)
+            log.msg('Writing new projects file: %s...' % new_config_filename)
             with open(new_config_filename, 'w') as config_file:
                 config_file.write(str(config_text))
-            log.msg('Linking to new log file...')
+            log.msg('Linking the new projects file...')
             os.symlink(new_config_filename, PROJECTS_FILENAME)
+            log.msg('%s EXISTS: %s' % (PROJECTS_FILENAME,
+                                       os.path.exists(PROJECTS_FILENAME)))
             log.msg('Checking configuration validity...')
             result = subprocess.check_output(['buildbot', 'checkconfig'],
                                              stderr=subprocess.STDOUT)
