@@ -27,8 +27,9 @@ from buildbot.status.web.base import path_to_authzfail
 from buildbot.status.web.base import ActionResource
 
 CONFIG_DIR = 'config'
-PROJECTS_FILENAME = os.path.join(CONFIG_DIR, 'sidecar_projects.yaml')
-PROJECTS_BACKUP_FILENAME = PROJECTS_FILENAME+'.BACKUP'
+PROJECTS_PATH = os.path.join(CONFIG_DIR, 'sidecar_projects.yaml')
+PROJECTS_FILENAME_TEMPLATE = 'sidecar_projects.%s.yaml'
+PROJECTS_BACKUP_PATH = PROJECTS_PATH+'.BACKUP'
 
 
 #/config
@@ -45,7 +46,7 @@ class ConfigResource(HtmlResource):
 
         ctx['success'] = req.args.get('success', [None])[0]
 
-        with open(PROJECTS_FILENAME, 'r') as config_file:
+        with open(PROJECTS_PATH, 'r') as config_file:
             ctx['config_str'] = config_file.read()
 
         template = req.site.buildbot_service.templates.get_template(
@@ -76,19 +77,19 @@ class ReconfigActionResource(ActionResource):
         config_text = config_text.replace('\r', '')
 
         timestr = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        new_config_filename = '%s.%s' % (PROJECTS_FILENAME, timestr)
+        new_config_filename = PROJECTS_FILENAME_TEMPLATE % timestr
+        new_config_path = os.path.join(CONFIG_DIR, new_config_filename)
 
         log.msg('Backing up old link to projects file...')
 
-        shutil.move(PROJECTS_FILENAME, PROJECTS_BACKUP_FILENAME)
+        shutil.move(PROJECTS_PATH, PROJECTS_BACKUP_PATH)
         try:
-            log.msg('Writing new projects file: %s...' % new_config_filename)
-            with open(new_config_filename, 'w') as config_file:
+            log.msg('Writing new projects file: %s ...' % new_config_path)
+            with open(new_config_path, 'w') as config_file:
                 config_file.write(str(config_text))
             log.msg('Linking the new projects file...')
-            os.symlink(new_config_filename, PROJECTS_FILENAME)
-            log.msg('%s EXISTS: %s' % (PROJECTS_FILENAME,
-                                       os.path.exists(PROJECTS_FILENAME)))
+            os.symlink(new_config_filename, PROJECTS_PATH)
+            log.msg(os.readlink(PROJECTS_PATH))
             log.msg('Checking configuration validity...')
             result = subprocess.check_output(['buildbot', 'checkconfig'],
                                              stderr=subprocess.STDOUT)
@@ -98,7 +99,7 @@ class ReconfigActionResource(ActionResource):
             log.msg('Buildbot reconfiguring!')
             success = '1'
             try:
-                os.remove(PROJECTS_BACKUP_FILENAME)
+                os.remove(PROJECTS_BACKUP_PATH)
             except IOError as exc:
                 log.msg(str(exc))
         except (subprocess.CalledProcessError, IOError) as exc:
@@ -106,8 +107,8 @@ class ReconfigActionResource(ActionResource):
             if hasattr(exc, 'output'):
                 log.msg(exc.output)
             log.msg('Reverting the symlink to the last backup.')
-            os.remove(PROJECTS_FILENAME)
-            shutil.move(PROJECTS_BACKUP_FILENAME, PROJECTS_FILENAME)
+            os.remove(PROJECTS_PATH)
+            shutil.move(PROJECTS_BACKUP_PATH, PROJECTS_PATH)
             success = '0'
 
         path = "%sconfig?success=%s" % (path_to_root(req), success)
